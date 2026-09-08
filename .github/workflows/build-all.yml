@@ -1,153 +1,149 @@
 name: Build All Targets
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
+workflow_dispatch:
+push:
+branches: [ main ]
+paths-ignore:
+  - '**.md'
+  - '.gitignore'
 
 jobs:
-  # 1. Standard Linux (x86_64)
-  linux-x86_64:
-    name: Linux x86_64
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+linux-x86_64:
+name: Linux x86_64
+runs-on: ubuntu-24.04
+steps:
+  - uses: actions/checkout@v4
+    with:
+      submodules: recursive
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential cmake ninja-build rsync curl file \
-            libgl1-mesa-dev libegl1-mesa-dev \
-            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
-            libxfixes-dev libxss-dev libxkbcommon-dev \
-            libasound2-dev libpulse-dev libdbus-1-dev \
-            libwayland-dev libpipewire-0.3-dev
+  - name: Install Dependencies
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y \
+        build-essential cmake ninja-build rsync curl file \
+        libgl1-mesa-dev libegl1-mesa-dev \
+        libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+        libxfixes-dev libxss-dev libxkbcommon-dev \
+        libasound2-dev libpulse-dev libdbus-1-dev \
+        libwayland-dev libpipewire-0.3-dev
 
-      - name: Build and Package
-        run: |
-          cmake --preset linux-x64
-          cmake --build --preset linux-x64-release -j$(nproc)
-          chmod +x linux_create_appimage.sh
-          ./linux_create_appimage.sh build/linux-x64 dist
+  - name: Build and Package
+    run: |
+      cmake --preset linux-x64
+      cmake --build --preset linux-x64-release -j$(nproc)
+      chmod +x linux_create_appimage.sh
+      ./linux_create_appimage.sh build/linux-x64 dist
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PicaSim-Linux-x86_64
-          path: dist/PicaSim-*-x86_64.AppImage
+  - uses: actions/upload-artifact@v4
+    with:
+      name: PicaSim-Linux-x86_64
+      path: dist/PicaSim-*-x86_64.AppImage
 
-  # 2. ARM Linux (aarch64)
-  linux-arm64:
-    name: Linux ARM64
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+linux-arm64:
+name: Linux ARM64
+runs-on: ubuntu-24.04-arm
+steps:
+  - uses: actions/checkout@v4
+    with:
+      submodules: recursive
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential cmake ninja-build rsync curl file \
-            libgl1-mesa-dev libegl1-mesa-dev \
-            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
-            libxfixes-dev libxss-dev libxkbcommon-dev \
-            libasound2-dev libpulse-dev libdbus-1-dev \
-            libwayland-dev libpipewire-0.3-dev
+  - name: Install Dependencies
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y \
+        build-essential cmake ninja-build rsync curl file \
+        libgl1-mesa-dev libegl1-mesa-dev \
+        libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+        libxfixes-dev libxss-dev libxkbcommon-dev \
+        libasound2-dev libpulse-dev libdbus-1-dev \
+        libwayland-dev libpipewire-0.3-dev
 
-      - name: Build and Package
-        run: |
-          cmake --preset linux-arm64
-          cmake --build --preset linux-arm64-release -j$(nproc)
-          chmod +x linux_create_appimage.sh
-          ./linux_create_appimage.sh build/linux-arm64 dist
+  - name: Build and Package
+    run: |
+      cmake --preset linux-arm64
+      cmake --build --preset linux-arm64-release -j$(nproc)
+      chmod +x linux_create_appimage.sh
+      ./linux_create_appimage.sh build/linux-arm64 dist
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PicaSim-Linux-ARM64
-          path: dist/PicaSim-*-aarch64.AppImage
+  - uses: actions/upload-artifact@v4
+    with:
+      name: PicaSim-Linux-ARM64
+      path: dist/PicaSim-*-aarch64.AppImage
 
-  # 3. Standard Windows (x86_64)
-  windows-x64:
-    name: Windows x86_64
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+windows-x64:
+name: Windows x86_64
+runs-on: windows-latest
+steps:
+  - uses: actions/checkout@v4
+    with:
+      submodules: recursive
 
-      - name: Configure CMake
-        shell: cmd
-        run: |
-          cmake -B build-win-x64 -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DPICASIM_ENABLE_VR=OFF ^
-            -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
-            -DVCPKG_TARGET_TRIPLET=x64-windows
+  - name: Configure CMake
+    shell: cmd
+    run: |
+      cmake -B build-win-x64 -G Ninja ^
+        -DCMAKE_BUILD_TYPE=Release ^
+        -DPICASIM_ENABLE_VR=OFF ^
+        -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
+        -DVCPKG_TARGET_TRIPLET=x64-windows
 
-      - name: Build
-        shell: cmd
-        run: cmake --build build-win-x64 --config Release --parallel
+  - name: Build
+    shell: cmd
+    run: cmake --build build-win-x64 --config Release --parallel
 
-      - name: Bundle Package
-        shell: bash
-        run: |
-          mkdir -p dist-win-x64
-          cp build-win-x64/Release/PicaSim.exe dist-win-x64/ 2>/dev/null || cp build-win-x64/PicaSim.exe dist-win-x64/ 2>/dev/null || cp build-win-x64/bin/PicaSim.exe dist-win-x64/
-          cp -r data dist-win-x64/
-          cp LICENSE.txt dist-win-x64/
-          cd dist-win-x64
-          7z a ../PicaSim-1.4.0-windows-x64.zip *
+  - name: Bundle Package
+    shell: bash
+    run: |
+      mkdir -p dist-win-x64
+      cp build-win-x64/Release/PicaSim.exe dist-win-x64/ 2>/dev/null || cp build-win-x64/PicaSim.exe dist-win-x64/ 2>/dev/null || cp build-win-x64/bin/PicaSim.exe dist-win-x64/
+      cp -r data dist-win-x64/
+      cp LICENSE.txt dist-win-x64/
+      cd dist-win-x64
+      7z a ../PicaSim-1.4.0-windows-x64.zip *
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PicaSim-Windows-x86_64
-          path: PicaSim-1.4.0-windows-x64.zip
+  - uses: actions/upload-artifact@v4
+    with:
+      name: PicaSim-Windows-x86_64
+      path: PicaSim-1.4.0-windows-x64.zip
 
-  # 4. Windows ARM64 (Snapdragon / Native ARM)
-  windows-arm64:
-    name: Windows ARM64
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+windows-arm64:
+name: Windows ARM64
+runs-on: windows-latest
+steps:
+  - uses: actions/checkout@v4
+    with:
+      submodules: recursive
 
-      - name: Set up MSVC ARM64 Cross-Compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64_arm64
+  - name: Set up MSVC ARM64 Cross-Compiler
+    uses: ilammy/msvc-dev-cmd@v1
+    with:
+      arch: x64_arm64
 
-      - name: Configure CMake
-        shell: cmd
-        run: |
-          cmake -B build-win-arm64 -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DPICASIM_ENABLE_VR=OFF ^
-            -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
-            -DVCPKG_TARGET_TRIPLET=arm64-windows
+  - name: Configure CMake
+    shell: cmd
+    run: |
+      cmake -B build-win-arm64 -G Ninja ^
+        -DCMAKE_BUILD_TYPE=Release ^
+        -DPICASIM_ENABLE_VR=OFF ^
+        -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
+        -DVCPKG_TARGET_TRIPLET=arm64-windows
 
-      - name: Build
-        shell: cmd
-        run: cmake --build build-win-arm64 --config Release --parallel
+  - name: Build
+    shell: cmd
+    run: cmake --build build-win-arm64 --config Release --parallel
 
-      - name: Bundle Package
-        shell: bash
-        run: |
-          mkdir -p dist-win-arm64
-          cp build-win-arm64/Release/PicaSim.exe dist-win-arm64/ 2>/dev/null || cp build-win-arm64/PicaSim.exe dist-win-arm64/ 2>/dev/null || cp build-win-arm64/bin/PicaSim.exe dist-win-arm64/
-          cp -r data dist-win-arm64/
-          cp LICENSE.txt dist-win-arm64/
-          cd dist-win-arm64
-          7z a ../PicaSim-1.4.0-windows-arm64.zip *
+  - name: Bundle Package
+    shell: bash
+    run: |
+      mkdir -p dist-win-arm64
+      cp build-win-arm64/Release/PicaSim.exe dist-win-arm64/ 2>/dev/null || cp build-win-arm64/PicaSim.exe dist-win-arm64/ 2>/dev/null || cp build-win-arm64/bin/PicaSim.exe dist-win-arm64/
+      cp -r data dist-win-arm64/
+      cp LICENSE.txt dist-win-arm64/
+      cd dist-win-arm64
+      7z a ../PicaSim-1.4.0-windows-arm64.zip *
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PicaSim-Windows-ARM64
-          path: PicaSim-1.4.0-windows-arm64.zip
+  - uses: actions/upload-artifact@v4
+    with:
+      name: PicaSim-Windows-ARM64
+      path: PicaSim-1.4.0-windows-arm64.zip
