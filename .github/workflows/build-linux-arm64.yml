@@ -1,0 +1,47 @@
+name: Build Linux ARM64 AppImage
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+
+jobs:
+  build-arm64-appimage:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake ninja-build rsync curl file \
+            libgl1-mesa-dev libegl1-mesa-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxss-dev libxkbcommon-dev \
+            libasound2-dev libpulse-dev libdbus-1-dev \
+            libwayland-dev libpipewire-0.3-dev
+
+      - name: Configure CMake
+        run: cmake --preset linux-arm64
+
+      - name: Compile PicaSim
+        run: cmake --build --preset linux-arm64-release -j$(nproc)
+
+      - name: Package AppImage
+        run: |
+          chmod +x linux_create_appimage.sh
+          ./linux_create_appimage.sh build/linux-arm64 dist
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PicaSim-1.4.0-aarch64
+          path: dist/PicaSim-*-aarch64.AppImage
