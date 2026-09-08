@@ -1,3 +1,4 @@
+
 name: Build Windows ARM64
 
 on:
@@ -18,12 +19,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Set up MSVC ARM64 Cross-Compiler Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64_arm64
+
       - name: Configure CMake for Windows ARM64
         shell: cmd
         run: |
-          cmake -B build-win-arm64 ^
-            -G "Visual Studio 17 2022" ^
-            -A ARM64 ^
+          cmake -B build-win-arm64 -G Ninja ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DPICASIM_ENABLE_VR=OFF ^
             -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
@@ -38,7 +42,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist-win-arm64
-          cp build-win-arm64/Release/PicaSim.exe dist-win-arm64/ 2>/dev/null || cp build-win-arm64/bin/Release/PicaSim.exe dist-win-arm64/
+          cp build-win-arm64/Release/PicaSim.exe dist-win-arm64/ 2>/dev/null || cp build-win-arm64/PicaSim.exe dist-win-arm64/ 2>/dev/null || cp build-win-arm64/bin/PicaSim.exe dist-win-arm64/
           cp -r data dist-win-arm64/
           cp LICENSE.txt dist-win-arm64/
           cd dist-win-arm64
