@@ -18,11 +18,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install vcpkg packages (ARM64)
-        shell: cmd
-        run: |
-          vcpkg install glad:arm64-windows
-
       - name: Configure CMake for Windows ARM64
         shell: cmd
         run: |
