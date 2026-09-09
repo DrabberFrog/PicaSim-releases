@@ -105,11 +105,24 @@ jobs:
         with:
           submodules: recursive
       
-      - name: Patch legacy Bullet Physics for ARM64
-        shell: bash
+      - name: Patch legacy Bullet Physics for ARM64 using Python
+        shell: python
         run: |
-          find source/bullet-2.81 -type f -exec sed -i 's/#define BT_USE_SSE/\/\/ #define BT_USE_SSE/g' {} +
-          find source/bullet-2.81 -type f -exec sed -i 's/#define BT_USE_SSE_IN_API/\/\/ #define BT_USE_SSE_IN_API/g' {} +
+          import os, re
+          for root, dirs, files in os.walk('source/bullet-2.81'):
+              for f in files:
+                  if f.endswith(('.h', '.cpp', '.hpp', '.c')):
+                      p = os.path.join(root, f)
+                      try:
+                          with open(p, 'r', encoding='utf-8') as file:
+                              c = file.read()
+                          if 'BT_USE_SSE' in c:
+                              c = re.sub(r'#\s*define\s+BT_USE_SSE\b', '// #define BT_USE_SSE', c)
+                              c = re.sub(r'#\s*define\s+BT_USE_SSE_IN_API\b', '// #define BT_USE_SSE_IN_API', c)
+                              with open(p, 'w', encoding='utf-8') as file:
+                                  file.write(c)
+                      except Exception:
+                          pass
 
       - name: Set up MSVC ARM64 Cross-Compiler
         uses: ilammy/msvc-dev-cmd@v1
