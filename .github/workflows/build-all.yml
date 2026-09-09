@@ -105,16 +105,18 @@ jobs:
         with:
           submodules: recursive
       
-      - name: Patch legacy Bullet Physics for ARM64 using PowerShell
+      - name: Nuke Bullet Physics Intel Headers
         shell: pwsh
         run: |
           $files = Get-ChildItem -Path "source/bullet-2.81" -Recurse -File | Where-Object { $_.Extension -match '\.(h|cpp)$' }
           foreach ($file in $files) {
-              $content = Get-Content $file.FullName -Raw
-              if ($content -match 'BT_USE_SSE') {
-                  $content = $content -replace '#define\s+BT_USE_SSE_IN_API\b', '// #define BT_USE_SSE_IN_API'
-                  $content = $content -replace '#define\s+BT_USE_SSE\b', '// #define BT_USE_SSE'
-                  Set-Content -Path $file.FullName -Value $content
+              $c = Get-Content $file.FullName -Raw
+              if ($c -match 'BT_USE_SSE' -or $c -match 'mmintrin\.h') {
+                  $c = $c -replace '(?m)^\s*#define\s+BT_USE_SSE.*$', '// #define BT_USE_SSE'
+                  $c = $c -replace '(?m)^\s*#include\s+<emmintrin\.h>.*$', '// #include <emmintrin.h>'
+                  $c = $c -replace '(?m)^\s*#include\s+<xmmintrin\.h>.*$', '// #include <xmmintrin.h>'
+                  $c = $c -replace '(?m)^\s*#include\s+<pmmintrin\.h>.*$', '// #include <pmmintrin.h>'
+                  Set-Content -Path $file.FullName -Value $c
               }
           }
 
@@ -129,6 +131,7 @@ jobs:
           cmake -B build-win-arm64 -G Ninja ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DPICASIM_ENABLE_VR=OFF ^
+            -DCMAKE_CXX_FLAGS="/DBT_NO_SIMD_OPERATOR_OVERLOADS /D__BT_SKIP_SSE__" ^
             -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
             -DVCPKG_TARGET_TRIPLET=arm64-windows
       
