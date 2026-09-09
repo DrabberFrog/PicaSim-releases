@@ -75,11 +75,15 @@ jobs:
       
       - name: Set up MSVC Compiler
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
       
       - name: Configure CMake
         shell: cmd
         run: |
           cmake -B build-win-x64 -G Ninja ^
+            -DCMAKE_C_COMPILER=cl ^
+            -DCMAKE_CXX_COMPILER=cl ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DPICASIM_ENABLE_VR=OFF ^
             -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
