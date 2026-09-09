@@ -108,9 +108,8 @@ jobs:
       - name: Patch legacy Bullet Physics for ARM64
         shell: bash
         run: |
-          echo "" >> source/bullet-2.81/Bullet/LinearMath/btScalar.h
-          echo "#undef BT_USE_SSE" >> source/bullet-2.81/Bullet/LinearMath/btScalar.h
-          echo "#undef BT_USE_SSE_IN_API" >> source/bullet-2.81/Bullet/LinearMath/btScalar.h
+          find source/bullet-2.81 -type f -exec sed -i 's/#define BT_USE_SSE/\/\/ #define BT_USE_SSE/g' {} +
+          find source/bullet-2.81 -type f -exec sed -i 's/#define BT_USE_SSE_IN_API/\/\/ #define BT_USE_SSE_IN_API/g' {} +
 
       - name: Set up MSVC ARM64 Cross-Compiler
         uses: ilammy/msvc-dev-cmd@v1
