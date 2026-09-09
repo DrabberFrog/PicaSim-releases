@@ -104,26 +104,32 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      
       - name: Patch legacy Bullet Physics for ARM64
         shell: bash
         run: |
-          find source/bullet-2.81 -type f -name "*.cpp" -exec sed -i 's/#include <emmintrin.h>/\/\/ #include <emmintrin.h>/g' {} +
-          find source/bullet-2.81 -type f -name "*.cpp" -exec sed -i 's/#include <xmmintrin.h>/\/\/ #include <xmmintrin.h>/g' {} +
+          find source/bullet-2.81 -type f -exec sed -i 's/#include <emmintrin.h>/\/\/ #include <emmintrin.h>/g' {} +
+          find source/bullet-2.81 -type f -exec sed -i 's/#include <xmmintrin.h>/\/\/ #include <xmmintrin.h>/g' {} +
+
       - name: Set up MSVC ARM64 Cross-Compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64_arm64
+      
       - name: Configure CMake
         shell: cmd
         run: |
           cmake -B build-win-arm64 -G Ninja ^
             -DCMAKE_BUILD_TYPE=Release ^
             -DPICASIM_ENABLE_VR=OFF ^
+            -DCMAKE_CXX_FLAGS="/DBT_NO_SIMD_OPERATOR_OVERLOADS /D__BT_SKIP_SSE__" ^
             -DCMAKE_TOOLCHAIN_FILE="%VCPKG_INSTALLATION_ROOT%/scripts/buildsystems/vcpkg.cmake" ^
             -DVCPKG_TARGET_TRIPLET=arm64-windows
+      
       - name: Build
         shell: cmd
         run: cmake --build build-win-arm64 --config Release --parallel
+      
       - name: Bundle Package
         shell: bash
         run: |
@@ -133,6 +139,7 @@ jobs:
           cp LICENSE.txt dist-win-arm64/ 2>/dev/null || true
           cd dist-win-arm64
           7z a ../PicaSim-1.4.0-windows-arm64.zip *
+      
       - uses: actions/upload-artifact@v4
         with:
           name: PicaSim-Windows-ARM64
